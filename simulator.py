@@ -233,6 +233,7 @@ while True:
 
     # Convert dictionary -> JSON -> bytes
     message = json.dumps(data).encode()
+    print(message)
 
     # Send to vis.py
     sock.sendto(

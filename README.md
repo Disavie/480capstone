@@ -11,3 +11,5 @@ upon receiving, store each section of the packet into a database corresponding t
     1. 3d attidude (pitch, yaw, roll)
     2. 2d map (lat/lon)
     3. velocity graphs (x,y,z)
+
+visulizer works as a base, take a break and switch to creating the gui -> use py QT widgets to make panes

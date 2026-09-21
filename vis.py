@@ -28,7 +28,6 @@ sock.bind(
     (UDP_IP, UDP_PORT)
 )
 
-# Don't allow recvfrom() to freeze the visualization
 sock.setblocking(False)
 
 
@@ -63,9 +62,82 @@ def draw_cube():
 
     for face in faces:
         for vertex in face:
-            glVertex3fv(
-                vertices[vertex]
-            )
+            glVertex3fv(vertices[vertex])
+
+    glEnd()
+
+
+# ============================================================
+# DIRECTION ARROW
+# ============================================================
+
+def draw_direction_arrow():
+
+    # The cube's forward direction is +Z.
+    #
+    # Cube front:
+    #       z = +1
+    #
+    # Arrow:
+    #       starts at z = 1
+    #       ends at z = 3.5
+
+    arrow_start = 1.0
+    arrow_end = 3.5
+
+    # ----------------------------
+    # Arrow shaft
+    # ----------------------------
+
+    glLineWidth(5.0)
+
+    glColor3f(
+        1.0,
+        0.0,
+        0.0
+    )
+
+    glBegin(GL_LINES)
+
+    glVertex3f(
+        0,
+        0,
+        arrow_start
+    )
+
+    glVertex3f(
+        0,
+        0,
+        arrow_end
+    )
+
+    glEnd()
+
+    # ----------------------------
+    # Arrow head
+    # ----------------------------
+
+    # Four lines making a simple arrowhead
+
+    head_start = 3.1
+    head_end = 3.5
+    head_size = 0.35
+
+    glBegin(GL_LINES)
+
+    # Top/bottom
+    glVertex3f(0, 0, head_end)
+    glVertex3f(head_size, 0, head_start)
+
+    glVertex3f(0, 0, head_end)
+    glVertex3f(-head_size, 0, head_start)
+
+    # Left/right
+    glVertex3f(0, 0, head_end)
+    glVertex3f(0, head_size, head_start)
+
+    glVertex3f(0, 0, head_end)
+    glVertex3f(0, -head_size, head_start)
 
     glEnd()
 
@@ -146,8 +218,7 @@ while running:
             message.decode()
         )
 
-        orientation = \
-            data["orientation"]
+        orientation = data["orientation"]
 
         roll = orientation["roll"]
         pitch = orientation["pitch"]
@@ -155,7 +226,6 @@ while running:
 
     except BlockingIOError:
 
-        # No new packet yet
         pass
 
 
@@ -209,7 +279,21 @@ while running:
     # DRAW CUBE
     # ========================================================
 
+    glColor3f(
+        0.7,
+        0.7,
+        0.7
+    )
+
     draw_cube()
+
+
+    # ========================================================
+    # DRAW FACING DIRECTION
+    # ========================================================
+
+    draw_direction_arrow()
+
 
     pygame.display.flip()
 
