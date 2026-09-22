@@ -6,7 +6,7 @@ import math
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 5000
-sample_rate = 60
+sample_rate = 30
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
