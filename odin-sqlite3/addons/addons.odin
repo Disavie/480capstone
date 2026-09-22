@@ -142,7 +142,9 @@ prepare :: proc(
 			// https://sqlite.org/c3ref/bind_blob.html.
 			cstr := strings.unsafe_string_to_cstring(v)
 			sqlite3.bind_text(stmt^, idx, cstr, c.int(len(v)), {behaviour = .Static}) or_return
-		} else {
+		} else if v, ok := param.value.(f64); ok {
+      sqlite3.bind_double(stmt^, idx, c.double(v)) or_return
+    } else {
 			log.errorf("unhandled parameter type {}", param.value)
 			return .Internal
 		}
