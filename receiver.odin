@@ -136,7 +136,9 @@ main :: proc(){
       everything from TIME..UZ will be a float
       PARITY can be a 1 bit even parity
       GROUP and UUID will be 8 bits each
+
       |GROUP|UUID|TIME|UX|UY|UZ|PARITY|
+
       GROUP, UUID -> 4 Bytes
       Data fields -> 4 Bytes (32 bits)
       Parity -> 1 bit + padding
