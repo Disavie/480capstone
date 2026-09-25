@@ -2,6 +2,7 @@ package receiver
 import "core:net"
 import "core:fmt"
 import "core:os"
+import "core:time"
 
 import sqlite "./odin-sqlite3/"
 import sa "./odin-sqlite3/addons/"
@@ -42,25 +43,42 @@ check_parity :: proc(buf: []byte, n : int) -> bool {
     return count % 2 == 0
 }
 add_entry :: proc(db: ^sqlite.Connection, transmitter_id: i64, data: []byte, field_width: int) {
-    timestamp := (^f32)(&data[0])^
-    ux := (^f32)(&data[4])^
-    uy := (^f32)(&data[8])^
-    uz := (^f32)(&data[12])^
+    timestamp := transmute(i64)time.now()
+    ax := (^f32)(&data[0])^
+    ay := (^f32)(&data[4])^
+    az := (^f32)(&data[8])^
+    lat := (^f32)(&data[12])^
+    lon := (^f32)(&data[16])^
+    height := (^f32)(&data[20])^
+    v := (^f32)(&data[24])^
+    bearing := (^f32)(&data[28])^
+    roll := (^f32)(&data[32])^
+    pitch := (^f32)(&data[36])^
+    yaw := (^f32)(&data[40])^
 
     if status := sa.execute(db, `
-        INSERT INTO entries (transmitter_id, timestamp, ux, uy, uz)
-        VALUES (?, ?, ?, ?, ?);
+        INSERT INTO entries (transmitter_id, timestamp, ax, ay, az, lat, lon, height, v, bearing, roll, pitch, yaw)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `, []sa.Query_Param{
         {index = 1, value = transmitter_id},
-        {index = 2, value = f64(timestamp)},
-        {index = 3, value = f64(ux)},
-        {index = 4, value = f64(uy)},
-        {index = 5, value = f64(uz)},
+        {index = 2, value = i64(timestamp)},
+        {index = 3, value = f64(ax)},
+        {index = 4, value = f64(ay)},
+        {index = 5, value = f64(az)},
+        {index = 6, value = f64(lat)},
+        {index = 7, value = f64(lon)},
+        {index = 8, value = f64(height)},
+        {index = 9, value = f64(v)},
+        {index = 10, value = f64(bearing)},
+        {index = 11, value = f64(roll)},
+        {index = 12, value = f64(pitch)},
+        {index = 13, value = f64(yaw)},
     }); status != .Ok {
         fmt.println("insert entry failed:", sqlite.errmsg(db))
     }
 }
 main :: proc(){
+
 
   fmt.println("hello burger")
   // opening localhost udp channel, imitates receiving data from somewhere
@@ -70,7 +88,7 @@ main :: proc(){
   //checking if database exists locally, if not create it
 	db: ^sqlite.Connection
 
-	if rc := sqlite.open("./data/db.sqlite", &db); rc != .Ok {
+	if rc := sqlite.open("./data/test_db.sqlite", &db); rc != .Ok {
 		fmt.panicf("failed to open database. result code {}", rc)
 	}
   if status := sa.execute(db, "PRAGMA foreign_keys = On"); status != .Ok{
@@ -108,10 +126,18 @@ main :: proc(){
       CREATE TABLE IF NOT EXISTS entries(
       id INTEGER PRIMARY KEY,
       transmitter_id INTEGER NOT NULL,
-      timestamp INTEGER NOT NULL,
-      ux REAL,
-      uy REAL,
-      uz REAL,
+      timestamp TEXT NOT NULL,
+      ax REAL,
+      ay REAL,
+      az REAL,
+      lat REAL,
+      lon REAL,
+      height REAL,
+      v REAL,
+      bearing REAL,
+      roll REAL,
+      pitch REAL,
+      yaw REAL,
       FOREIGN KEY (transmitter_id) REFERENCES transmitters(id)
       );
   `); status != .Ok {
@@ -144,10 +170,12 @@ main :: proc(){
       Parity -> 1 bit + padding
   '''
   */
-  buf: [25]byte
+  buf: [53]byte
   field_width := 4
   for {
+
       n, remote, err := net.recv_udp(sock, buf[:])
+
       if err != nil {
           fmt.println("recv error:", err)
           continue
@@ -158,7 +186,7 @@ main :: proc(){
         panic("TRANSMISSION ERROR")
       }
       
-    
+      now := time.now()    
       GRP := string(buf[:4]) // "Is this part of my transmitters group?"aaa
       tx_uuid := string(buf[4:8])
 

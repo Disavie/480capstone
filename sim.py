@@ -15,28 +15,43 @@ sample_rate = 30
 
 
 
-
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-with open("data/gyro_sample.csv", newline="") as file:
+with open("data/cow-test.csv", newline="") as file:
     reader = csv.reader(file)
     next(reader)
 
     for row in reader:
-        timestamp = float(row[0])
-        ux = math.degrees(float(row[1]))
-        uy = math.degrees(float(row[2]))
-        uz = math.degrees(float(row[3]))
+        ax = float(row[1])
+        ay = float(row[2])
+        az = float(row[3])
+        lat = float(row[4])
+        lon = float(row[5])
+        height = float(row[6])
+        v = float(row[7])
+        bearing = float(row[8])
+        roll = math.degrees(float(row[9]))
+        pitch = math.degrees(float(row[10]))
+        yaw = math.degrees(float(row[11]))
+
 
         packet = struct.pack(
-            "<4s4sffff",
+            "<4s4sfffffffffff",
             GROUP,
             UUID,
-            timestamp,
-            ux,
-            uy,
-            uz,
+            ax,
+            ay,
+            az,
+            lat,
+            lon,
+            height,
+            v,
+            bearing,
+            roll,
+            pitch,
+            yaw
+
         )
 #Even parity over all preceding bytes
 
@@ -45,7 +60,7 @@ with open("data/gyro_sample.csv", newline="") as file:
 
         packet += struct.pack("<B", parity)
         print(packet)
-        print(f"{ux} {uy} {uz} \r", end="")
+        print(f"{roll} {pitch} {yaw} \r", end="")
 
         sock.sendto(packet, (UDP_IP, UDP_PORT))
         time.sleep(1 / sample_rate)
@@ -54,7 +69,8 @@ with open("data/gyro_sample.csv", newline="") as file:
     everything from TIME..UZ will be a float
     PARITY can be a 1 bit even parity
     GROUP and UUID will be 8 bits each
-    |GROUP|UUID|TIME|UX|UY|UZ|PARITY|
+
+    |GROUP|UUID|ax|ay|az|lat|lon|height|velocity|bearing|roll|pitch|yaw|PARITY|
     GROUP, UUID -> 4 Bytes
     Data fields -> 4 Bytes (32 bits)
     Parity -> 1 bit + padding
