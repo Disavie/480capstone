@@ -1,6 +1,6 @@
 import json
-import socket
 import pygame
+import sqlite3
 
 from pygame.locals import (
     DOUBLEBUF,
@@ -10,25 +10,6 @@ from pygame.locals import (
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
-
-
-# ============================================================
-# UDP
-# ============================================================
-
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5000
-
-sock = socket.socket(
-    socket.AF_INET,
-    socket.SOCK_DGRAM
-)
-
-sock.bind(
-    (UDP_IP, UDP_PORT)
-)
-
-sock.setblocking(False)
 
 
 # ============================================================
@@ -211,18 +192,20 @@ while running:
     # ========================================================
 
     try:
+        with sqlite3.connect("data/test_db.sqlite") as con:
+            cursor = con.cursor()
 
-        message, address = sock.recvfrom(65535)
+            sql_query = "SELECT * FROM entries ORDER BY timestamp DESC LIMIT 1"
+            query_params = ()
+            cursor.execute(sql_query,query_params)
 
-        data = json.loads(
-            message.decode()
-        )
+            res = cursor.fetchall()[0]
 
-        orientation = data["orientation"]
-
-        roll = orientation["roll"]
-        pitch = orientation["pitch"]
-        yaw = orientation["yaw"]
+            print(res)
+            if len(res) > 3:
+                roll = res[len(res)-3]
+                pitch = res[len(res)-2]
+                yaw = res[len(res)-1]
 
     except BlockingIOError:
 

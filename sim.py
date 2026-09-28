@@ -11,7 +11,7 @@ UDP_PORT_JSON = 5001
 
 GROUP = b"ABCD"
 UUID  = b"1234"
-sample_rate = 30
+sample_rate = 1
 
 
 
@@ -59,8 +59,6 @@ with open("data/cow-test.csv", newline="") as file:
         parity = ones & 1
 
         packet += struct.pack("<B", parity)
-        print(packet)
-        print(f"{roll} {pitch} {yaw} \r", end="")
 
         sock.sendto(packet, (UDP_IP, UDP_PORT))
         time.sleep(1 / sample_rate)
