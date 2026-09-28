@@ -43,7 +43,8 @@ check_parity :: proc(buf: []byte, n : int) -> bool {
     return count % 2 == 0
 }
 add_entry :: proc(db: ^sqlite.Connection, transmitter_id: i64, data: []byte, field_width: int) {
-    timestamp := transmute(i64)time.now()
+    timestamp := time.now()
+
     ax := (^f32)(&data[0])^
     ay := (^f32)(&data[4])^
     az := (^f32)(&data[8])^
@@ -61,7 +62,7 @@ add_entry :: proc(db: ^sqlite.Connection, transmitter_id: i64, data: []byte, fie
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `, []sa.Query_Param{
         {index = 1, value = transmitter_id},
-        {index = 2, value = i64(timestamp)},
+        {index = 2, value = transmute(i64)(timestamp)},
         {index = 3, value = f64(ax)},
         {index = 4, value = f64(ay)},
         {index = 5, value = f64(az)},
@@ -79,9 +80,10 @@ add_entry :: proc(db: ^sqlite.Connection, transmitter_id: i64, data: []byte, fie
 }
 main :: proc(){
 
-
   fmt.println("hello burger")
+
   // opening localhost udp channel, imitates receiving data from somewhere
+  fmt.println(time.now())
   sock := init_udp()
   defer net.close(sock)
 
@@ -126,7 +128,7 @@ main :: proc(){
       CREATE TABLE IF NOT EXISTS entries(
       id INTEGER PRIMARY KEY,
       transmitter_id INTEGER NOT NULL,
-      timestamp TEXT NOT NULL,
+      timestamp INTEGER,
       ax REAL,
       ay REAL,
       az REAL,
@@ -186,7 +188,6 @@ main :: proc(){
         panic("TRANSMISSION ERROR")
       }
       
-      now := time.now()    
       GRP := string(buf[:4]) // "Is this part of my transmitters group?"aaa
       tx_uuid := string(buf[4:8])
 
